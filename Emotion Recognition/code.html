@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MindBloom AI | Mental Wellness Monitor</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #A7B0D8 0%, #7E86B0 100%); /* Softer, calming gradient */
+            --secondary-color: #6C7A89; /* Darker blue-grey for text */
+            --accent-color: #7E86B0; /* Main accent for borders, focus */
+            --positive-color: #4CAF50; /* Green */
+            --neutral-color: #FFC107; /* Amber */
+            --negative-color: #F44336; /* Red */
+            --bg-light: rgba(255, 255, 255, 0.95);
+            --bg-dark-card: rgba(255, 255, 255, 0.1);
+            --text-dark: #2C3E50; /* Dark blue for primary text */
+            --text-light: #ECF0F1; /* Light grey for text on dark backgrounds */
+            --shadow-light: 0 8px 32px rgba(0,0,0,0.1);
+            --shadow-hover: 0 6px 20px rgba(0,0,0,0.2);
+            --border-light: 1px solid rgba(255,255,255,0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--primary-gradient);
+            min-height: 100vh;
+            color: var(--text-dark);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.15); /* Slightly transparent background for the whole container */
+            border-radius: 20px;
+            box-shadow: var(--shadow-light);
+            backdrop-filter: blur(10px);
+            border: var(--border-light);
+        }
+
+        .header {
+            text-align: center;
+            color: var(--text-light);
+            margin-bottom: 40px;
+            padding: 20px;
+            border-bottom: var(--border-light);
+        }
+
+        .header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 6px rgba(0,0,0,0.4);
+            letter-spacing: 0.05em;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: var(--bg-light);
+            border-radius: 18px;
+            padding: 30px;
+            box-shadow: var(--shadow-light);
+            backdrop-filter: blur(10px);
+            border: var(--border-light);
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h3 {
+            color: var(--text-dark);
+            margin-bottom: 25px;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px dashed #BDC3C7;
+            padding-bottom: 15px;
+        }
+
+        .input-section {
+            margin-bottom: 20px;
+        }
+
+        .input-section label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 1.1rem;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 15px;
+            border: 2px solid #DCE1E7;
+            border-radius: 10px;
+            font-size: 1rem;
+            resize: vertical;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            background: #F8F9F9;
+            color: var(--text-dark);
+        }
+
+        textarea::placeholder {
+            color: #A9B2BB;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 4px rgba(126, 134, 176, 0.2);
+        }
+
+        button {
+            background: var(--primary-gradient);
+            color: var(--text-light);
+            border: none;
+            padding: 14px 28px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .voice-controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .voice-controls button {
+            flex: 1;
+            margin-top: 0; /* Override common button margin */
+        }
+
+        .recording {
+            background: linear-gradient(135deg, var(--negative-color) 0%, #FF7F7F 100%);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 40px;
+        }
+
+        .mood-indicator {
+            text-align: center;
+            padding: 25px;
+            border-radius: 18px;
+            background: var(--bg-light);
+            box-shadow: var(--shadow-light);
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .mood-indicator:hover {
+            transform: translateY(-5px);
+        }
+
+        .mood-indicator h4 {
+            font-size: 1.2rem;
+            color: var(--secondary-color);
+            margin-bottom: 15px;
+        }
+
+        .mood-score {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin: 15px 0;
+            line-height: 1;
+        }
+
+        .mood-label {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--secondary-color);
+        }
+
+        /* Color classes for scores */
+        .mood-positive { color: var(--positive-color); }
+        .mood-neutral { color: var(--neutral-color); }
+        .mood-negative { color: var(--negative-color); }
+
+        .recommendations {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, var(--positive-color) 0%, #66BB6A 100%); /* Greenish gradient */
+            color: var(--text-light);
+            border-radius: 18px;
+            padding: 30px;
+            box-shadow: var(--shadow-light);
+            border: var(--border-light);
+            margin-top: 25px;
+        }
+
+        .recommendations h3 {
+            color: var(--text-light);
+            margin-bottom: 25px;
+            border-bottom: 1px dashed rgba(255,255,255,0.4);
+            padding-bottom: 15px;
+            font-size: 1.5rem;
+        }
+
+        .recommendation-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .recommendation-item {
+            background: rgba(255,255,255,0.25);
+            padding: 20px;
+            border-radius: 12px;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.3);
+            transition: background 0.2s ease;
+        }
+
+        .recommendation-item:hover {
+            background: rgba(255,255,255,0.35);
+        }
+
+        .recommendation-item h4 {
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+            color: var(--text-light);
+        }
+
+        .recommendation-item p {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: rgba(255,255,255,0.9);
+        }
+
+        .privacy-notice {
+            background: var(--bg-light);
+            border-left: 6px solid var(--accent-color);
+            padding: 20px;
+            margin-top: 40px;
+            border-radius: 0 12px 12px 0;
+            box-shadow: var(--shadow-light);
+        }
+
+        .privacy-notice h4 {
+            color: var(--text-dark);
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+
+        .privacy-notice p {
+            font-size: 0.95rem;
+            color: var(--secondary-color);
+            line-height: 1.6;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 25px;
+            background: var(--bg-light);
+            padding: 20px;
+            border-radius: 18px;
+            box-shadow: var(--shadow-light);
+        }
+
+        /* Media Queries for Responsiveness */
+        @media (max-width: 900px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            .header h1 {
+                font-size: 2.2rem;
+            }
+            .header p {
+                font-size: 1rem;
+            }
+            .card {
+                padding: 25px;
+            }
+            .card h3 {
+                font-size: 1.3rem;
+            }
+            .mood-indicator, .recommendation-item {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+            .main-grid, .results-grid, .recommendation-list {
+                gap: 15px;
+            }
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            .header p {
+                font-size: 0.9rem;
+            }
+            .mood-score {
+                font-size: 2.8rem;
+            }
+            button {
+                font-size: 1rem;
+                padding: 12px 20px;
+            }
+            .voice-controls {
+                flex-direction: column;
+            }
+            .privacy-notice {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧠 MindBloom AI</h1>
+            <p>Your Personal Mental Wellness Companion</p>
+        </div>
+
+        <div class="main-grid">
+            <div class="card">
+                <h3>📝 Text Insights</h3>
+                <div class="input-section">
+                    <label for="textInput">Share your thoughts or recent social media posts:</label>
+                    <textarea id="textInput" placeholder="Type or paste your text here for mood analysis. This could be journal entries, social media posts, or any written content..."></textarea>
+                    <button id="analyzeText">Analyze Mood from Text</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🎤 Voice Patterns</h3>
+                <div class="input-section">
+                    <label>Analyze your voice for stress indicators:</label>
+                    <p style="font-size: 0.95rem; color: var(--secondary-color); margin-bottom: 15px;">
+                        Speak naturally for 10-30 seconds. We'll simulate analysis of speech patterns, tone, and pace for stress indicators.
+                    </p>
+                    <div class="voice-controls">
+                        <button id="startRecording">Start Recording</button>
+                        <button id="stopRecording" disabled>Stop Recording</button>
+                    </div>
+                    <div id="recordingStatus" style="margin-top: 10px; font-size: 0.9rem; color: var(--secondary-color);"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="results-grid" id="resultsSection" style="display: none;">
+            <div class="mood-indicator">
+                <h4>Overall Mood</h4>
+                <div id="moodScore" class="mood-score">--</div>
+                <div id="moodLabel" class="mood-label">Analyzing...</div>
+            </div>
+
+            <div class="mood-indicator">
+                <h4>Stress Level</h4>
+                <div id="stressScore" class="mood-score">--</div>
+                <div id="stressLabel" class="mood-label">Analyzing...</div>
+            </div>
+
+            <div class="mood-indicator">
+                <h4>Risk Assessment</h4>
+                <div id="riskScore" class="mood-score">--</div>
+                <div id="riskLabel" class="mood-label">Analyzing...</div>
+            </div>
+            
+            <div class="chart-container">
+                <h3>📊 Mood & Stress Trends</h3>
+                <canvas id="moodChart"></canvas>
+            </div>
+        </div>
+
+        <div class="recommendations">
+            <h3>💡 Personalized Recommendations</h3>
+            <div class="recommendation-list" id="recommendationsList">
+                </div>
+        </div>
+
+        <div class="privacy-notice">
+            <h4>🔒 Privacy & Data Security</h4>
+            <p>Your data is processed locally in your browser for privacy-preserving analysis. No audio or text data is stored or transmitted to external servers. All computations happen on your device.</p>
+        </div>
+    </div>
+
+    <script>
+        class MentalHealthMonitor {
+            constructor() {
+                this.isRecording = false;
+                this.mediaRecorder = null;
+                this.audioChunks = [];
+                this.moodHistory = []; // Stores objects like { mood: 70, stress: 30, risk: 5, timestamp: new Date() }
+                this.chart = null; // To hold the Chart.js instance
+
+                this.initializeEventListeners();
+                this.loadHistoricalData(); // Load some initial data for the chart
+            }
+
+            initializeEventListeners() {
+                document.getElementById('analyzeText').addEventListener('click', () => this.analyzeText());
+                document.getElementById('startRecording').addEventListener('click', () => this.startRecording());
+                document.getElementById('stopRecording').addEventListener('click', () => this.stopRecording());
+            }
+
+            // --- Text Analysis Engine (Improved Simulation) ---
+            async analyzeText() {
+                const text = document.getElementById('textInput').value.trim();
+                if (!text) {
+                    alert('Please enter some text to analyze.');
+                    return;
+                }
+
+                const analyzeButton = document.getElementById('analyzeText');
+                analyzeButton.disabled = true;
+                analyzeButton.textContent = 'Analyzing...';
+                this.resetResultsDisplay(); // Clear previous results and show "Analyzing..."
+
+                try {
+                    const analysis = await this.performTextAnalysis(text);
+                    this.displayResults(analysis);
+                } catch (error) {
+                    console.error('Text analysis error:', error);
+                    alert('Text analysis failed. Please try again.');
+                } finally {
+                    analyzeButton.disabled = false;
+                    analyzeButton.textContent = 'Analyze Mood from Text';
+                }
+            }
+
+            async performTextAnalysis(text) {
+                // Simulate AI processing delay
+                await this.delay(1800); // Slightly faster simulation
+
+                const words = text.toLowerCase().split(/\s+/).filter(word => word.length > 0);
+                const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+
+                // Expanded and slightly refined sentiment/stress word lists
+                const positiveWords = ['happy', 'joy', 'love', 'excited', 'great', 'wonderful', 'amazing', 'good', 'fantastic', 'excellent', 'peaceful', 'calm', 'relaxed', 'confident', 'optimistic', 'hopeful', 'blessed', 'thriving', 'accomplished', 'grateful'];
+                const negativeWords = ['sad', 'depressed', 'anxious', 'worried', 'fear', 'hate', 'terrible', 'awful', 'bad', 'stressed', 'overwhelmed', 'hopeless', 'lonely', 'angry', 'frustrated', 'tired', 'exhausted', 'struggle', 'difficult', 'pain', 'upset', 'down'];
+                const riskWords = ['suicide', 'kill', 'die', 'death', 'hurt myself', 'harm myself', 'end it all', 'give up', 'no point', 'worthless', 'burden', 'can\'t go on', 'goodbye'];
+
+                let positiveScore = 0;
+                let negativeScore = 0;
+                let riskScore = 0;
+                let wordCount = words.length;
+
+                if (wordCount === 0) return { mood: 50, stress: 50, risk: 0, details: {}, timestamp: new Date() };
+
+                words.forEach(word => {
+                    if (positiveWords.includes(word)) positiveScore++;
+                    if (negativeWords.includes(word)) negativeScore++;
+                    // Check for multi-word risk phrases
+                    if (riskWords.some(rw => text.toLowerCase().includes(rw))) riskScore += 5; // Higher impact for phrases
+                });
+
+                // Add intensity for capitalization and punctuation
+                const exclamationCount = (text.match(/!/g) || []).length;
+                const questionCount = (text.match(/\?/g) || []).length;
+                const capsWordCount = words.filter(word => word === word.toUpperCase() && word.length > 1).length;
+
+                // Mood calculation based on sentiment and general tone
+                let mood = 50; // Baseline
+                if (positiveScore > negativeScore) {
+                    mood += (positiveScore / wordCount) * 50;
+                } else if (negativeScore > positiveScore) {
+                    mood -= (negativeScore / wordCount) * 50;
+                }
+                // Add minor adjustments for very expressive posts
+                if (exclamationCount > 0 && mood > 50) mood += 5; // Positive excitement
+                else if (exclamationCount > 0 && mood < 50) mood -= 5; // Negative intensity
+
+                mood = Math.round(Math.max(0, Math.min(100, mood)));
+
+                // Stress calculation based on negative words and linguistic patterns
+                let stress = 30; // Baseline
+                stress += (negativeScore / wordCount) * 40; // More negative words = more stress
+                
+                const avgSentenceLength = wordCount / sentences.length;
+                if (avgSentenceLength < 8 && wordCount > 5) stress += 15; // Very short sentences (if not just single words)
+                if (capsWordCount > 0) stress += (capsWordCount / wordCount) * 20; // Capitalization indicates stress/anger
+                if (exclamationCount > 0) stress += exclamationCount * 2; // Exclamations can be stress
+                if (questionCount > 0 && text.toLowerCase().includes("what if")) stress += 10; // Anxiety indicator
+
+                stress = Math.round(Math.max(0, Math.min(100, stress)));
+
+                // Risk calculation
+                if (riskScore > 0) {
+                    // Risk level increases significantly with risk words
+                    riskScore = Math.min(riskScore, 100); // Cap at 100
+                } else {
+                    riskScore = 0;
+                }
+                
+                // If mood is very low AND stress is very high, increase risk slightly even without explicit words
+                if (mood < 20 && stress > 80 && riskScore < 20) {
+                    riskScore += 10; 
+                }
+
+                riskScore = Math.round(Math.max(0, Math.min(100, riskScore)));
+
+                return {
+                    mood: mood,
+                    stress: stress,
+                    risk: riskScore,
+                    details: {
+                        wordCount: wordCount,
+                        positiveWordsFound: positiveScore,
+                        negativeWordsFound: negativeScore,
+                        riskIndicatorsFound: riskScore > 0,
+                        avgSentenceLength: Math.round(avgSentenceLength * 10) / 10,
+                    },
+                    timestamp: new Date()
+                };
+            }
+
+            // --- Voice Recording and Analysis (Enhanced Simulation) ---
+            async startRecording() {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    this.mediaRecorder = new MediaRecorder(stream);
+                    this.audioChunks = [];
+
+                    this.mediaRecorder.ondataavailable = (event) => {
+                        this.audioChunks.push(event.data);
+                    };
+
+                    this.mediaRecorder.onstop = () => {
+                        this.analyzeVoice();
+                        // Stop all tracks to release microphone
+                        stream.getTracks().forEach(track => track.stop());
+                    };
+
+                    this.mediaRecorder.start();
+                    this.isRecording = true;
+
+                    document.getElementById('startRecording').disabled = true;
+                    document.getElementById('startRecording').classList.add('recording');
+                    document.getElementById('stopRecording').disabled = false;
+                    document.getElementById('recordingStatus').textContent = '🔴 Recording... Speak naturally for a few seconds.';
+
+                } catch (error) {
+                    console.error('Microphone access error:', error);
+                    alert('Could not access microphone. Please check permissions or try another browser.');
+                }
+            }
+
+            stopRecording() {
+                if (this.mediaRecorder && this.isRecording) {
+                    this.mediaRecorder.stop();
+                    this.isRecording = false;
+
+                    document.getElementById('startRecording').disabled = false;
+                    document.getElementById('startRecording').classList.remove('recording');
+                    document.getElementById('stopRecording').disabled = true;
+                    document.getElementById('recordingStatus').textContent = '⏳ Analyzing voice patterns...';
+                }
+            }
+
+            async analyzeVoice() {
+                this.resetResultsDisplay(); // Clear previous results and show "Analyzing..."
+                await this.delay(3000); // Simulate processing time
+
+                // --- Improved Voice Analysis Simulation ---
+                // In a real application, the 'audioChunks' would be sent to a server-side
+                // AI model or processed by a client-side library like TensorFlow.js with a pre-trained model.
+                // This simulation attempts to generate somewhat 'realistic' linked scores.
+
+                let simulatedPitchVariation = Math.random(); // 0 to 1
+                let simulatedSpeakingRate = Math.random(); // 0 to 1
+                let simulatedVoiceStability = Math.random(); // 0 to 1
+
+                // Simulate stress based on higher pitch variation, faster rate, lower stability
+                let stress = (simulatedPitchVariation * 40) + (simulatedSpeakingRate * 30) + ((1 - simulatedVoiceStability) * 30);
+                stress = Math.round(Math.max(0, Math.min(100, stress)));
+
+                // Simulate mood inversely to stress (roughly)
+                let mood = 100 - stress;
+                mood += (Math.random() * 20 - 10); // Add some random fluctuation
+                mood = Math.round(Math.max(0, Math.min(100, mood)));
+
+                // Simulate risk - low by default unless very high stress/low mood
+                let risk = Math.round(Math.random() * 10); // Default low risk
+
+                if (stress > 80 && mood < 30) {
+                    risk += Math.round(Math.random() * 20 + 10); // Moderate risk for combined high stress/low mood
+                }
+                risk = Math.round(Math.max(0, Math.min(100, risk)));
+
+                const analysis = {
+                    mood: mood,
+                    stress: stress,
+                    risk: risk,
+                    details: {
+                        pitchVariation: Math.round(simulatedPitchVariation * 100),
+                        speakingRate: Math.round(120 + simulatedSpeakingRate * 80), // 120-200 words/min
+                        voiceStability: Math.round(simulatedVoiceStability * 100),
+                        energyLevel: Math.round(30 + Math.random() * 70) // 30-100
+                    },
+                    timestamp: new Date()
+                };
+
+                document.getElementById('recordingStatus').textContent = '✅ Voice analysis complete!';
+                this.displayResults(analysis);
+            }
+
+            // --- Results Display & Charting ---
+            resetResultsDisplay() {
+                document.getElementById('resultsSection').style.display = 'grid';
+                document.getElementById('moodScore').textContent = '--';
+                document.getElementById('stressScore').textContent = '--';
+                document.getElementById('riskScore').textContent = '--';
+                document.getElementById('moodLabel').textContent = 'Analyzing...';
+                document.getElementById('stressLabel').textContent = 'Analyzing...';
+                document.getElementById('riskLabel').textContent = 'Analyzing...';
+                document.getElementById('moodScore').className = 'mood-score';
+                document.getElementById('stressScore').className = 'mood-score';
+                document.getElementById('riskScore').className = 'mood-score';
+                document.getElementById('recommendationsList').innerHTML = ''; // Clear recommendations
+            }
+
+            displayResults(analysis) {
+                document.getElementById('resultsSection').style.display = 'grid';
+
+                const moodElement = document.getElementById('moodScore');
+                const moodLabelElement = document.getElementById('moodLabel');
+                moodElement.textContent = analysis.mood;
+                moodElement.className = `mood-score ${this.getMoodClass(analysis.mood)}`;
+                moodLabelElement.textContent = this.getMoodLabel(analysis.mood);
+
+                const stressElement = document.getElementById('stressScore');
+                const stressLabelElement = document.getElementById('stressLabel');
+                stressElement.textContent = analysis.stress;
+                stressElement.className = `mood-score ${this.getStressClass(analysis.stress)}`;
+                stressLabelElement.textContent = this.getStressLabel(analysis.stress);
+
+                const riskElement = document.getElementById('riskScore');
+                const riskLabelElement = document.getElementById('riskLabel');
+                riskElement.textContent = analysis.risk;
+                riskElement.className = `mood-score ${this.getRiskClass(analysis.risk)}`;
+                riskLabelElement.textContent = this.getRiskLabel(analysis.risk);
+
+                this.moodHistory.push(analysis);
+                this.updateMoodChart();
+                this.generateRecommendations(analysis);
+            }
+
+            getMoodClass(score) {
+                if (score >= 70) return 'mood-positive';
+                if (score >= 40) return 'mood-neutral';
+                return 'mood-negative';
+            }
+
+            getMoodLabel(score) {
+                if (score >= 80) return 'Excellent!';
+                if (score >= 70) return 'Positive';
+                if (score >= 50) return 'Neutral';
+                if (score >= 30) return 'Low';
+                return 'Very Low';
+            }
+
+            getStressClass(score) {
+                if (score <= 30) return 'mood-positive';
+                if (score <= 60) return 'mood-neutral';
+                return 'mood-negative';
+            }
+
+            getStressLabel(score) {
+                if (score <= 20) return 'Very Low';
+                if (score <= 40) return 'Low';
+                if (score <= 60) return 'Moderate';
+                if (score <= 80) return 'High';
+                return 'Very High';
+            }
+
+            getRiskClass(score) {
+                if (score <= 10) return 'mood-positive';
+                if (score <= 30) return 'mood-neutral';
+                return 'mood-negative';
+            }
+
+            getRiskLabel(score) {
+                if (score <= 5) return 'Very Low';
+                if (score <= 15) return 'Low';
+                if (score <= 30) return 'Moderate';
+                if (score <= 50) return 'High';
+                return 'Critical - Seek Help!';
+            }
+
+            // --- Recommendation Engine ---
+            generateRecommendations(analysis) {
+                const recommendations = [];
+
+                if (analysis.risk > 40) { // Higher threshold for critical intervention
+                    recommendations.push({
+                        title: '🚨 Immediate Support Needed',
+                        description: 'Please reach out to a mental health professional or crisis hotline immediately. Your well-being is paramount. National Suicide Prevention Lifeline: 988 (US), or find local helplines.',
+                        priority: 'critical'
+                    });
+                } else if (analysis.risk > 15) {
+                    recommendations.push({
+                        title: '⚠️ Consider Professional Help',
+                        description: 'Your responses indicate elevated risk factors. Speaking with a therapist or counselor can provide valuable support and coping strategies.',
+                        priority: 'high'
+                    });
+                }
+
+                if (analysis.mood < 40) {
+                    recommendations.push({
+                        title: '🌱 Nurture Your Mood',
+                        description: 'Engage in activities you enjoy, practice mindfulness or meditation, and connect with loved ones. Small steps can make a big difference.',
+                        priority: 'high'
+                    });
+                }
+
+                if (analysis.stress > 65) {
+                    recommendations.push({
+                        title: '🧘 Stress Management Techniques',
+                        description: 'Try deep breathing exercises, progressive muscle relaxation, or guided meditation. Ensure you are taking regular breaks.',
+                        priority: 'high'
+                    });
+                } else if (analysis.stress > 40) {
+                     recommendations.push({
+                        title: '🌿 Proactive Stress Relief',
+                        description: 'Incorporate light exercise, spend time in nature, or practice journaling to manage everyday stressors before they build up.',
+                        priority: 'medium'
+                    });
+                }
+
+                // General wellness recommendations
+                recommendations.push({
+                    title: '😴 Prioritize Sleep',
+                    description: 'Aim for 7-9 hours of quality sleep. A consistent sleep schedule can significantly impact mood and stress levels.',
+                    priority: 'medium'
+                });
+
+                recommendations.push({
+                    title: '🍎 Healthy Habits',
+                    description: 'Ensure you are eating nutritious meals and staying hydrated. Physical health is closely linked to mental well-being.',
+                    priority: 'medium'
+                });
+
+                recommendations.push({
+                    title: '🚶‍♂️ Move Your Body',
+                    description: 'Even a short walk or light stretching can release endorphins and improve your overall mental state.',
+                    priority: 'medium'
+                });
+
+                this.displayRecommendations(recommendations);
+            }
+
+            displayRecommendations(recommendations) {
+                const container = document.getElementById('recommendationsList');
+                container.innerHTML = ''; // Clear previous recommendations
+
+                recommendations.forEach(rec => {
+                    const item = document.createElement('div');
+                    item.className = 'recommendation-item';
+                    item.innerHTML = `
+                        <h4>${rec.title}</h4>
+                        <p>${rec.description}</p>
+                    `;
+                    container.appendChild(item);
+                });
+            }
+
+            // --- Chart Visualization ---
+            updateMoodChart() {
+                const ctx = document.getElementById('moodChart').getContext('2d');
+                
+                // Keep only the last 10 entries for cleaner chart
+                const recentData = this.moodHistory.slice(-10);
+                const labels = recentData.map((entry, index) => {
+                    // Use a more descriptive label if possible, or just session number
+                    return entry.timestamp ? new Date(entry.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : `Session ${index + 1}`;
+                });
+                const moodData = recentData.map(entry => entry.mood);
+                const stressData = recentData.map(entry => entry.stress);
+
+                if (this.chart) {
+                    this.chart.destroy(); // Destroy existing chart instance to prevent memory leaks
+                }
+
+                this.chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Mood Score',
+                            data: moodData,
+                            borderColor: 'rgb(75, 192, 192)', // Greenish-blue for mood
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            tension: 0.3,
+                            pointRadius: 5,
+                            pointHoverRadius: 8,
+                            pointBackgroundColor: 'rgb(75, 192, 192)',
+                            pointBorderColor: '#fff',
+                            pointHoverBorderColor: 'rgb(75, 192, 192)',
+                        }, {
+                            label: 'Stress Level',
+                            data: stressData,
+                            borderColor: 'rgb(255, 99, 132)', // Reddish for stress
+                            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                            tension: 0.3,
+                            pointRadius: 5,
+                            pointHoverRadius: 8,
+                            pointBackgroundColor: 'rgb(255, 99, 132)',
+                            pointBorderColor: '#fff',
+                            pointHoverBorderColor: 'rgb(255, 99, 132)',
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top',
+                                labels: {
+                                    color: '#555',
+                                    font: {
+                                        size: 14,
+                                        family: 'Inter'
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false,
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        label += context.raw;
+                                        return label;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                ticks: {
+                                    color: '#777',
+                                    font: {
+                                        family: 'Inter'
+                                    }
+                                },
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.05)'
+                                }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                ticks: {
+                                    color: '#777',
+                                    font: {
+                                        family: 'Inter'
+                                    }
+                                },
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.05)'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // --- Utility Functions ---
+            delay(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+
+            // In a real application, you might load a user's historical patterns from local storage or a backend.
+            loadHistoricalData() {
+                // Simulate some historical data for demo purposes, representing past sessions
+                const sampleData = [
+                    { mood: 68, stress: 32, risk: 5, timestamp: new Date(Date.now() - 86400000 * 4) }, // 4 days ago
+                    { mood: 75, stress: 28, risk: 3, timestamp: new Date(Date.now() - 86400000 * 3) }, // 3 days ago
+                    { mood: 55, stress: 45, risk: 8, timestamp: new Date(Date.now() - 86400000 * 2) }, // 2 days ago
+                    { mood: 62, stress: 38, risk: 6, timestamp: new Date(Date.now() - 86400000 * 1) }, // 1 day ago
+                    { mood: 70, stress: 30, risk: 4, timestamp: new Date() } // Now (placeholder for the latest)
+                ];
+                this.moodHistory = sampleData;
+                this.updateMoodChart();
+            }
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            new MentalHealthMonitor();
+        });
+    </script>
+</body>
+</html>
